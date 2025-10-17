@@ -11,11 +11,11 @@ import com.github.alura.reminder.repository.ReminderRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -76,5 +76,15 @@ public class ReminderService {
         if (!reminder.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not allowed to edit this reminder");
         }
+    }
+
+    public List<Reminder> getDueReminders() {
+        LocalDateTime now = LocalDateTime.now();
+        return reminderRepository.findAllByRemindBeforeAndIsSentFalse(now);
+    }
+
+    public void markAsSent(Reminder reminder) {
+        reminder.setSent(true);
+        reminderRepository.save(reminder);
     }
 }

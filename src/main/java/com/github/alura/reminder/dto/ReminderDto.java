@@ -15,4 +15,5 @@ public class ReminderDto {
     private String description;
     private LocalDateTime remind;
     private Long userId;
+    private boolean isSent;
 }

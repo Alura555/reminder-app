@@ -1,7 +1,34 @@
 spring:
   application:
     name: reminder
+
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:reminder_db}
     username: ${POSTGRES_USER:reminder_user}
     password: ${POSTGRES_PASSWORD:reminder_password}
+
+  quartz:
+    job-store-type: memory
+    wait-for-jobs-to-complete-on-shutdown: true
+    scheduler-name: reminderScheduler
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 5
+            threadPriority: 5
+          jobStore:
+            misfireThreshold: 60000
+    timezone: Europe/Moscow
+
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:example@example.com}
+    password: ${MAIL_PASSWORD:password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+          starttls.required: true

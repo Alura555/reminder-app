@@ -9,7 +9,7 @@ import com.github.alura.reminder.filter.ReminderFilter;
 import com.github.alura.reminder.mapper.ReminderMapper;
 import com.github.alura.reminder.repository.ReminderRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.mockito.Mockito;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class ReminderServiceTest {
@@ -68,19 +66,17 @@ class ReminderServiceTest {
         savedEntity.setTitle("Title");
         savedEntity.setUser(user);
 
-        ReminderDto savedDto = new ReminderDto(10L, "Title", "Desc", reminderEntity.getRemind(), user.getId());
+        ReminderDto savedDto = new ReminderDto(10L, "Title", "Desc", reminderEntity.getRemind(), user.getId(), false);
 
         Mockito.when(reminderMapper.toEntity(dto)).thenReturn(reminderEntity);
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.save(reminderEntity)).thenReturn(savedEntity);
         Mockito.when(reminderMapper.toDto(savedEntity)).thenReturn(savedDto);
 
-        // when
         ReminderDto result = reminderService.createReminder(dto);
 
-        // then
-        Assertions.assertThat(result.getId()).isEqualTo(10L);
-        Assertions.assertThat(result.getTitle()).isEqualTo("Title");
+        Assertions.assertEquals(10L, result.getId());
+        Assertions.assertEquals("Title", result.getTitle());
 
         Mockito.verify(reminderRepository).save(reminderEntity);
         Mockito.verify(reminderMapper).toEntity(dto);
@@ -117,24 +113,18 @@ class ReminderServiceTest {
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
 
-        // when / then
-        Assertions.assertThatThrownBy(() -> reminderService.deleteReminder(1L))
-                .isInstanceOf(SecurityException.class)
-                .hasMessageContaining("not allowed");
+        Assertions.assertThrows(AccessDeniedException.class,
+                        () -> reminderService.deleteReminder(1L));
 
         Mockito.verify(reminderRepository, Mockito.never()).delete(Mockito.any(Reminder.class));
     }
 
     @Test
     void deleteReminder_shouldThrowIfNotFound() {
-        // given
         Mockito.when(reminderRepository.findById(999L)).thenReturn(Optional.empty());
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
 
-        // when / then
-        Assertions.assertThatThrownBy(() -> reminderService.deleteReminder(999L))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Reminder not found");
+        Assertions.assertThrows(EntityNotFoundException.class, () -> reminderService.deleteReminder(999L));
     }
 
     @Test
@@ -154,8 +144,8 @@ class ReminderServiceTest {
 
         Page<Reminder> page = new PageImpl<>(List.of(reminder1, reminder2), pageable, 2);
 
-        ReminderDto dto1 = new ReminderDto(1L, "Test1", "Desc1", LocalDateTime.now(), user.getId());
-        ReminderDto dto2 = new ReminderDto(2L, "Test2", "Desc2", LocalDateTime.now(), user.getId());
+        ReminderDto dto1 = new ReminderDto(1L, "Test1", "Desc1", LocalDateTime.now(), user.getId(), false);
+        ReminderDto dto2 = new ReminderDto(2L, "Test2", "Desc2", LocalDateTime.now(), user.getId(), false);
 
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderMapper.toFilter(request, user.getId())).thenReturn(filter);
@@ -164,12 +154,10 @@ class ReminderServiceTest {
         Mockito.when(reminderMapper.toDto(reminder1)).thenReturn(dto1);
         Mockito.when(reminderMapper.toDto(reminder2)).thenReturn(dto2);
 
-        // when
         Page<ReminderDto> result = reminderService.getReminders(request);
 
-        // then
-        Assertions.assertThat(result.getContent()).hasSize(2);
-        Assertions.assertThat(result.getContent().get(0).getTitle()).isEqualTo("Test1");
+        Assertions.assertEquals(2, result.getContent().size());
+        Assertions.assertEquals("Test1", result.getContent().get(0).getTitle());
         Mockito.verify(reminderRepository).findAll(filter, pageable);
     }
 
@@ -183,7 +171,6 @@ class ReminderServiceTest {
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.findById(1L)).thenReturn(Optional.of(existingReminder));
 
-        // MapStruct просто обновляет поля
         Mockito.doAnswer(invocation -> {
             ReminderRequestDto source = invocation.getArgument(0);
             Reminder target = invocation.getArgument(1);
@@ -207,9 +194,9 @@ class ReminderServiceTest {
 
         ReminderDto updated = reminderService.updateReminder(1L, dto);
 
-        assertEquals("New Title", updated.getTitle());
-        assertEquals("New Desc", updated.getDescription());
-        assertEquals(existingReminder.getId(), updated.getId());
+        Assertions.assertEquals("New Title", updated.getTitle());
+        Assertions.assertEquals("New Desc", updated.getDescription());
+        Assertions.assertEquals(existingReminder.getId(), updated.getId());
 
         Mockito.verify(reminderRepository).save(existingReminder);
         Mockito.verify(reminderMapper).updateFromDto(dto, existingReminder);
@@ -224,8 +211,49 @@ class ReminderServiceTest {
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.findById(42L)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> reminderService.updateReminder(42L, dto));
+        org.junit.jupiter.api.Assertions.assertThrows(EntityNotFoundException.class, () -> reminderService.updateReminder(42L, dto));
 
         Mockito.verify(reminderRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    void getDueReminders_shouldReturnOnlyNotSentRemindersBeforeNow() {
+        Reminder reminder1 = new Reminder();
+        reminder1.setId(1L);
+        reminder1.setTitle("Reminder 1");
+        reminder1.setRemind(LocalDateTime.now().minusHours(1));
+        reminder1.setSent(false);
+
+        Reminder reminder2 = new Reminder();
+        reminder2.setId(2L);
+        reminder2.setTitle("Reminder 2");
+        reminder2.setRemind(LocalDateTime.now().minusMinutes(30));
+        reminder2.setSent(false);
+
+        List<Reminder> dueReminders = List.of(reminder1, reminder2);
+
+        Mockito.when(reminderRepository.findAllByRemindBeforeAndIsSentFalse(Mockito.any()))
+                .thenReturn(dueReminders);
+
+        List<Reminder> result = reminderService.getDueReminders();
+
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertTrue(result.contains(reminder1));
+        Assertions.assertTrue(result.contains(reminder2));
+        Mockito.verify(reminderRepository).findAllByRemindBeforeAndIsSentFalse(Mockito.any());
+    }
+
+    @Test
+    void markAsSent_shouldSetSentTrueAndSaveReminder() {
+        Reminder reminder = new Reminder();
+        reminder.setId(1L);
+        reminder.setTitle("Reminder 1");
+        reminder.setRemind(LocalDateTime.now().minusHours(1));
+        reminder.setSent(false);
+
+        reminderService.markAsSent(reminder);
+
+        Assertions.assertTrue(reminder.isSent());
+        Mockito.verify(reminderRepository).save(reminder);
     }
 }

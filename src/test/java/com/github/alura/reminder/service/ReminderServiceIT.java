@@ -1,5 +1,6 @@
 package com.github.alura.reminder.service;
 
+import com.github.alura.reminder.config.TestcontainersConfiguration;
 import com.github.alura.reminder.dto.ReminderDto;
 import com.github.alura.reminder.dto.ReminderListRequest;
 import com.github.alura.reminder.dto.ReminderRequestDto;
@@ -13,16 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,25 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Testcontainers
+@ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class ReminderServiceIT {
-
-    static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-
-    static {
-        postgresContainer.start();
-    }
-
-    @DynamicPropertySource
-    static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgresContainer::getUsername);
-        registry.add("spring.datasource.password", postgresContainer::getPassword);
-    }
-
     @Autowired
     private ReminderRepository reminderRepository;
 
@@ -284,16 +266,16 @@ class ReminderServiceIT {
     private void addReminders() {
         List<Reminder> reminders = List.of(
                 new Reminder(null, "Meeting", "Team meeting with project updates",
-                        LocalDateTime.of(2025, 10, 20, 9, 0), testUser),
+                        LocalDateTime.of(2025, 10, 20, 9, 0), testUser, false),
 
                 new Reminder(null, "Shopping", "Buy groceries and cleaning supplies",
-                        LocalDateTime.of(2025, 10, 21, 15, 0), testUser),
+                        LocalDateTime.of(2025, 10, 21, 15, 0), testUser, false),
 
                 new Reminder(null, "Dentist", "Dentist appointment at 10 AM",
-                        LocalDateTime.of(2025, 10, 22, 10, 0), testUser),
+                        LocalDateTime.of(2025, 10, 22, 10, 0), testUser, false),
 
                 new Reminder(null, "Workout", "Morning run and gym",
-                        LocalDateTime.of(2025, 10, 23, 7, 30), testUser)
+                        LocalDateTime.of(2025, 10, 23, 7, 30), testUser, false)
         );
 
         reminderRepository.saveAll(reminders);

@@ -1,5 +1,6 @@
 package com.github.alura.reminder;
 
+import com.github.alura.reminder.config.TestcontainersConfiguration;
 import org.springframework.boot.SpringApplication;
 
 public class TestReminderApplication {
