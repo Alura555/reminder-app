@@ -49,8 +49,8 @@ public class ReminderService {
         ReminderFilter filter = reminderMapper.toFilter(request, user.getId());
         Pageable pageable = reminderMapper.toPageable(request);
 
-        Page<Reminder> page = reminderRepository.findAll(filter, pageable);
-        return page.map(reminderMapper::toDto);
+        return reminderRepository.findAll(filter, pageable)
+                .map(reminderMapper::toDto);
     }
 
     public ReminderDto updateReminder(Long reminderId, ReminderRequestDto dto) {
@@ -68,9 +68,8 @@ public class ReminderService {
     }
 
     private Reminder getReminderById(Long reminderId) {
-        Reminder reminder = reminderRepository.findById(reminderId)
+        return reminderRepository.findById(reminderId)
                 .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
-        return reminder;
     }
 
     private static void checkOwner(Reminder reminder, User user) {

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,7 +118,7 @@ class ReminderServiceIT {
         reminder = reminderRepository.save(reminder);
 
         Reminder finalReminder = reminder;
-        assertThrows(SecurityException.class, () -> reminderService.deleteReminder(finalReminder.getId()));
+        assertThrows(AccessDeniedException.class, () -> reminderService.deleteReminder(finalReminder.getId()));
     }
 
     @Test
@@ -240,6 +242,36 @@ class ReminderServiceIT {
         assertNotEquals(firstPage.getContent().get(0).getId(), secondPage.getContent().get(0).getId());
     }
 
+    @Test
+    void shouldFilterByFromDateOnly() {
+        addReminders();
+        ReminderListRequest request = new ReminderListRequest();
+        request.setFrom(LocalDateTime.of(2025, 10, 21, 0, 0));
+
+        Page<ReminderDto> page = reminderService.getReminders(request);
+
+        List<String> titles = page.getContent().stream().map(ReminderDto::getTitle).toList();
+        assertEquals(3, page.getTotalElements());
+        assertTrue(titles.containsAll(List.of("Shopping", "Dentist", "Workout")));
+    }
+
+    @Test
+    void shouldFilterByDateAndSearchText() {
+        addReminders();
+        ReminderListRequest request = new ReminderListRequest();
+        request.setSearch("meeting");
+        request.setFrom(LocalDateTime.of(2025, 10, 20, 0, 0));
+        request.setTo(LocalDateTime.of(2025, 10, 21, 23, 59));
+
+        Page<ReminderDto> page = reminderService.getReminders(request);
+
+        assertEquals(1, page.getTotalElements());
+
+        ReminderDto result = page.getContent().get(0);
+        assertEquals("Meeting", result.getTitle());
+        assertTrue(result.getRemind().isAfter(LocalDateTime.of(2025, 10, 19, 23, 59)));
+        assertTrue(result.getRemind().isBefore(LocalDateTime.of(2025, 10, 22, 0, 0)));
+    }
 
     private User createUser(String username) {
         User user = new User();
@@ -252,16 +284,16 @@ class ReminderServiceIT {
     private void addReminders() {
         List<Reminder> reminders = List.of(
                 new Reminder(null, "Meeting", "Team meeting with project updates",
-                        LocalDateTime.now().plusDays(1), testUser),
+                        LocalDateTime.of(2025, 10, 20, 9, 0), testUser),
 
                 new Reminder(null, "Shopping", "Buy groceries and cleaning supplies",
-                        LocalDateTime.now().plusDays(2), testUser),
+                        LocalDateTime.of(2025, 10, 21, 15, 0), testUser),
 
                 new Reminder(null, "Dentist", "Dentist appointment at 10 AM",
-                        LocalDateTime.now().plusDays(3), testUser),
+                        LocalDateTime.of(2025, 10, 22, 10, 0), testUser),
 
                 new Reminder(null, "Workout", "Morning run and gym",
-                        LocalDateTime.now().plusDays(4), testUser)
+                        LocalDateTime.of(2025, 10, 23, 7, 30), testUser)
         );
 
         reminderRepository.saveAll(reminders);

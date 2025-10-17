@@ -16,10 +16,10 @@ public class Reminder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 256)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 4096)
     private String description;
 
     @Column(nullable = false)

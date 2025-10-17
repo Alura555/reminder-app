@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Root;
 import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,8 @@ import java.util.List;
 public class ReminderFilter implements Specification<Reminder> {
     private String search;
     private Long userId;
+    private LocalDateTime from;
+    private LocalDateTime to;
 
     @Override
     public Predicate toPredicate(Root<Reminder> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
@@ -28,6 +31,13 @@ public class ReminderFilter implements Specification<Reminder> {
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%" + search.toLowerCase() + "%"),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + search.toLowerCase() + "%")
             ));
+        }
+
+        if (from!= null) {
+            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("remind"), from));
+        }
+        if (to != null) {
+            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("remind"), to));
         }
 
         return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
