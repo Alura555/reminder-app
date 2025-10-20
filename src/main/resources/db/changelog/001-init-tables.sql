@@ -2,7 +2,8 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    telegram_account VARCHAR(100)
+    telegram_account VARCHAR(100),
+    telegram_chat_id VARCHAR(100)
 );
 
 CREATE TABLE reminder (
