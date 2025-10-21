@@ -10,19 +10,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 
 import java.util.Objects;
 
 @ExtendWith(MockitoExtension.class)
-class EmailNotificationServiceTest {
+class EmailMessageServiceTest {
 
     @Mock
-    private JavaMailSender mailSender;
+    private MailSender mailSender;
 
     @InjectMocks
-    private EmailNotificationService service;
+    private EmailMessageService emailService;
 
     @Test
     void send_shouldCallMailSenderWithCorrectMessage() {
@@ -34,7 +34,7 @@ class EmailNotificationServiceTest {
         reminder.setTitle("Test Reminder");
         reminder.setDescription("Test description");
 
-        service.send(reminder);
+        emailService.send(reminder);
 
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         Mockito.verify(mailSender).send(captor.capture());
@@ -43,5 +43,22 @@ class EmailNotificationServiceTest {
         Assertions.assertEquals("test@example.com", Objects.requireNonNull(sentMessage.getTo())[0]);
         Assertions.assertEquals("Test Reminder", sentMessage.getSubject());
         Assertions.assertEquals("Test description", sentMessage.getText());
+    }
+
+    @Test
+    void sendLink_shouldCallMailSender() {
+        User user = User.builder().email("test@example.com").username("John").build();
+        String link = "https://t.me/bot?start=token123";
+
+        emailService.sendLink(user, link);
+
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        Mockito.verify(mailSender, Mockito.times(1)).send(captor.capture());
+
+        SimpleMailMessage message = captor.getValue();
+        Assertions.assertEquals("test@example.com", message.getTo()[0]);
+        Assertions.assertEquals("Приглашение в систему напоминаний", message.getSubject());
+        Assertions.assertTrue(message.getText().contains(link));
+        Assertions.assertTrue(message.getText().contains("John"));
     }
 }

@@ -43,3 +43,8 @@ spring:
             scope:
               - email
               - profile
+
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME:reminder_bot}
+    token: ${TELEGRAM_BOT_TOKEN:your_token_here}

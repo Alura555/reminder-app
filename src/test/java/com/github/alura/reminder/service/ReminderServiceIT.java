@@ -58,6 +58,16 @@ class ReminderServiceIT {
             public User getCurrentUser() {
                 return testUser;
             }
+
+            @Override
+            public User getOrCreateUserFromGoogle(String login, String email) {
+                return testUser;
+            }
+
+            @Override
+            public void addChatId(Long userId, String chatId) {
+
+            }
         };
 
         reminderService = new ReminderService(reminderRepository, reminderMapper, userService);

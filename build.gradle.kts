@@ -25,6 +25,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+	implementation("org.telegram:telegrambots-spring-boot-starter:6.9.7.1")
 	implementation("org.liquibase:liquibase-core")
 	implementation("org.mapstruct:mapstruct:1.6.3")
 	runtimeOnly("org.postgresql:postgresql")
