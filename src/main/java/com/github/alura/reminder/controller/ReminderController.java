@@ -7,16 +7,16 @@ import com.github.alura.reminder.service.ReminderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller("/api/v1/reminder")
+@RestController
+@RequestMapping("/api/v1/reminder")
 @AllArgsConstructor
 public class ReminderController {
     private final ReminderService reminderService;
 
     @PostMapping("/create")
-    public ResponseEntity<ReminderDto> createReminder(ReminderRequestDto reminderDto) {
+    public ResponseEntity<ReminderDto> createReminder(@RequestBody ReminderRequestDto reminderDto) {
         return ResponseEntity.ok(reminderService.createReminder(reminderDto));
     }
 
@@ -34,7 +34,7 @@ public class ReminderController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ReminderDto>> getReminderList(ReminderListRequest reminderListRequest) {
+    public ResponseEntity<Page<ReminderDto>> getReminderList(@ModelAttribute ReminderListRequest reminderListRequest) {
         return ResponseEntity.ok(reminderService.getReminders(reminderListRequest));
     }
 }
