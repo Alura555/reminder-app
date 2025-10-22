@@ -16,7 +16,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .oauth2Login(oauth2 -> oauth2
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/login", "/error").permitAll()
+                        .anyRequest().authenticated()
+                ).oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
                         .defaultSuccessUrl("/", true)
                 )

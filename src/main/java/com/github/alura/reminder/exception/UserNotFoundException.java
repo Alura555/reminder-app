@@ -1,6 +1,6 @@
 package com.github.alura.reminder.exception;
 
-public class UserNotFoundException extends RuntimeException {
+public class UserNotFoundException extends NotFoundException {
     public UserNotFoundException(String email) {
         super(String.format("User with email '%s' not found", email));
     }

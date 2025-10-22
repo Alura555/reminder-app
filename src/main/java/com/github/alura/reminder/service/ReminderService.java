@@ -5,10 +5,10 @@ import com.github.alura.reminder.dto.ReminderListRequest;
 import com.github.alura.reminder.dto.ReminderRequestDto;
 import com.github.alura.reminder.entity.Reminder;
 import com.github.alura.reminder.entity.User;
+import com.github.alura.reminder.exception.ReminderNotFoundException;
 import com.github.alura.reminder.filter.ReminderFilter;
 import com.github.alura.reminder.mapper.ReminderMapper;
 import com.github.alura.reminder.repository.ReminderRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,7 +69,7 @@ public class ReminderService {
 
     private Reminder getReminderById(Long reminderId) {
         return reminderRepository.findById(reminderId)
-                .orElseThrow(() -> new EntityNotFoundException("Reminder not found"));
+                .orElseThrow(() -> new ReminderNotFoundException(reminderId));
     }
 
     private static void checkOwner(Reminder reminder, User user) {
