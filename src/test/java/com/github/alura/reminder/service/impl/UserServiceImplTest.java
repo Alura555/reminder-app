@@ -31,7 +31,7 @@ class UserServiceImplTest {
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Mock
     private SecurityContext securityContext;

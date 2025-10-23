@@ -5,10 +5,10 @@ import com.github.alura.reminder.dto.ReminderListRequest;
 import com.github.alura.reminder.dto.ReminderRequestDto;
 import com.github.alura.reminder.entity.Reminder;
 import com.github.alura.reminder.entity.User;
+import com.github.alura.reminder.exception.NotFoundException;
 import com.github.alura.reminder.filter.ReminderFilter;
 import com.github.alura.reminder.mapper.ReminderMapper;
 import com.github.alura.reminder.repository.ReminderRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,7 +85,6 @@ class ReminderServiceTest {
 
     @Test
     void deleteReminder_shouldDeleteIfOwner() {
-        // given
         Reminder reminder = new Reminder();
         reminder.setId(1L);
         reminder.setUser(user);
@@ -93,16 +92,13 @@ class ReminderServiceTest {
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
 
-        // when
         reminderService.deleteReminder(1L);
 
-        // then
         Mockito.verify(reminderRepository).delete(reminder);
     }
 
     @Test
     void deleteReminder_shouldThrowIfNotOwner() {
-        // given
         User anotherUser = new User();
         anotherUser.setId(2L);
 
@@ -124,12 +120,11 @@ class ReminderServiceTest {
         Mockito.when(reminderRepository.findById(999L)).thenReturn(Optional.empty());
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
 
-        Assertions.assertThrows(EntityNotFoundException.class, () -> reminderService.deleteReminder(999L));
+        Assertions.assertThrows(NotFoundException.class, () -> reminderService.deleteReminder(999L));
     }
 
     @Test
     void getReminders_shouldReturnPagedDtos() {
-        // given
         ReminderListRequest request = new ReminderListRequest();
         ReminderFilter filter = Mockito.mock(ReminderFilter.class);
         Pageable pageable = PageRequest.of(0, 10);
@@ -211,7 +206,7 @@ class ReminderServiceTest {
         Mockito.when(userService.getCurrentUser()).thenReturn(user);
         Mockito.when(reminderRepository.findById(42L)).thenReturn(Optional.empty());
 
-        org.junit.jupiter.api.Assertions.assertThrows(EntityNotFoundException.class, () -> reminderService.updateReminder(42L, dto));
+        org.junit.jupiter.api.Assertions.assertThrows(NotFoundException.class, () -> reminderService.updateReminder(42L, dto));
 
         Mockito.verify(reminderRepository, Mockito.never()).save(Mockito.any());
     }
