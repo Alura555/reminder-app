@@ -3,9 +3,9 @@ spring:
     name: reminder
 
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:reminder_db}
-    username: ${POSTGRES_USER:reminder_user}
-    password: ${POSTGRES_PASSWORD:reminder_password}
+    url: jdbc:postgresql://${POSTGRES_CONTAINER_NAME}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
   quartz:
     job-store-type: memory
