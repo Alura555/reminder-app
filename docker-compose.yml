@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME:-reminder-postgres}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-reminder_db}
+      POSTGRES_USER: ${POSTGRES_USER:-reminder_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reminder_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reminder_user} -d ${POSTGRES_DB:-reminder_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reminder-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reminder-app
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped

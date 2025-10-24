@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: reminder
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_CONTAINER_NAME}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  quartz:
+    job-store-type: memory
+    wait-for-jobs-to-complete-on-shutdown: true
+    scheduler-name: reminderScheduler
+    properties:
+      org:
+        quartz:
+          threadPool:
+            threadCount: 5
+            threadPriority: 5
+          jobStore:
+            misfireThreshold: 60000
+    timezone: Europe/Moscow
+
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:example@example.com}
+    password: ${MAIL_PASSWORD:password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+          starttls.required: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME:reminder_bot}
+    token: ${TELEGRAM_BOT_TOKEN:your_token_here}
